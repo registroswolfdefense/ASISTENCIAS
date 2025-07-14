@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Registro de Asistencia</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f4f4f4;
+      padding: 2em;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 1em;
+      font-size: 16px;
+    }
+    .botones {
+      display: flex;
+      gap: 1em;
+    }
+    .botones button {
+      flex: 1;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #mapa {
+      height: 300px;
+      width: 100%;
+      margin-top: 1em;
+      border-radius: 10px;
+      display: none;
+    }
+    #resultado {
+      background: #fff;
+      padding: 1em;
+      margin-top: 2em;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Registro de Asistencia</h2>
+
+  <input type="text" id="nombre" placeholder="Nombre del guardia" />
+
+  <div class="botones">
+    <button onclick="registrar('Entrada')" style="background-color: #4CAF50; color: white;">Entrada</button>
+    <button onclick="registrar('Salida')" style="background-color: #f44336; color: white;">Salida</button>
+  </div>
+
+  <div id="mapa"></div>
+  <div id="resultado"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    function registrar(tipo) {
+      const nombre = document.getElementById("nombre").value.trim();
+      const resultado = document.getElementById("resultado");
+      const mapaDiv = document.getElementById("mapa");
+
+      if (!nombre) {
+        alert("⚠️ Debes ingresar tu nombre.");
+        return;
+      }
+
+      if (!navigator.geolocation) {
+        resultado.innerHTML = "🌐 Geolocalización no soportada.";
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(pos => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        const hora = new Date().toLocaleString();
+
+        // Mostrar mapa
+        mapaDiv.style.display = "block";
+        mapaDiv.innerHTML = ""; // Limpiar mapa anterior si existe
+
+        const mapa = L.map("mapa").setView([lat, lon], 18);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap',
+        }).addTo(mapa);
+        L.marker([lat, lon]).addTo(mapa)
+          .bindPopup(`${tipo} registrada aquí`)
+          .openPopup();
+
+        resultado.innerHTML = `
+          <h3>✅ ${tipo} Registrada</h3>
+          <p><strong>Nombre:</strong> ${nombre}</p>
+          <p><strong>Tipo:</strong> ${tipo}</p>
+          <p><strong>Hora:</strong> ${hora}</p>
+          <p><strong>Ubicación:</strong> Lat ${lat.toFixed(6)}, Lon ${lon.toFixed(6)}</p>
+        `;
+      }, err => {
+        resultado.innerHTML = "❌ No se pudo obtener la ubicación: " + err.message;
+      });
+    }
+  </script>
+</body>
+</html>
